@@ -105,10 +105,11 @@ public with sharing virtual class TriggerHandler {
 
   @TestVisible
   private void setTriggerContext(String ctx, Boolean testMode) {
-    this.isTriggerExecuting = Trigger.isExecuting;
-
-    if(!testMode){
+    if(!Trigger.isExecuting && !testMode){
+      this.isTriggerExecuting = false;
       return;
+    }else{
+      this.isTriggerExecuting = true;
     }
     
     if(ctx != null){
