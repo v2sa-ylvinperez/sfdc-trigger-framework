@@ -1,6 +1,5 @@
 public with sharing virtual class TriggerHandler {
-
-  // static map of handlername, times run() was invoked
+    // static map of handlername, times run() was invoked
   private static Map<String, LoopCount> loopCountMap;
   private static Set<String> bypassedHandlers;
 
@@ -106,33 +105,52 @@ public with sharing virtual class TriggerHandler {
 
   @TestVisible
   private void setTriggerContext(String ctx, Boolean testMode) {
-    if(!Trigger.isExecuting && !testMode) {
-      this.isTriggerExecuting = false;
+    this.isTriggerExecuting = Trigger.isExecuting;
+
+    if(!testMode){
       return;
-    } else {
-      this.isTriggerExecuting = true;
     }
     
-    if((Trigger.isExecuting && Trigger.isBefore && Trigger.isInsert) ||
-        (ctx != null && ctx == 'before insert')) {
-      this.context = TriggerContext.BEFORE_INSERT;
-    } else if((Trigger.isExecuting && Trigger.isBefore && Trigger.isUpdate) ||
-        (ctx != null && ctx == 'before update')){
-      this.context = TriggerContext.BEFORE_UPDATE;
-    } else if((Trigger.isExecuting && Trigger.isBefore && Trigger.isDelete) ||
-        (ctx != null && ctx == 'before delete')) {
-      this.context = TriggerContext.BEFORE_DELETE;
-    } else if((Trigger.isExecuting && Trigger.isAfter && Trigger.isInsert) ||
-        (ctx != null && ctx == 'after insert')) {
-      this.context = TriggerContext.AFTER_INSERT;
-    } else if((Trigger.isExecuting && Trigger.isAfter && Trigger.isUpdate) ||
-        (ctx != null && ctx == 'after update')) {
-      this.context = TriggerContext.AFTER_UPDATE;
-    } else if((Trigger.isExecuting && Trigger.isAfter && Trigger.isDelete) ||
-        (ctx != null && ctx == 'after delete')) {
-      this.context = TriggerContext.AFTER_DELETE;
-    } else if((Trigger.isExecuting && Trigger.isAfter && Trigger.isUndelete) ||
-        (ctx != null && ctx == 'after undelete')) {
+    if(ctx != null){
+      switch on ctx {
+        when 'before insert' {
+          this.context = TriggerContext.BEFORE_INSERT;
+        }
+        when 'before update' {
+          this.context = TriggerContext.BEFORE_UPDATE;
+        }
+        when 'before delete' {
+          this.context = TriggerContext.BEFORE_DELETE;
+        }
+        when 'after insert' {
+          this.context = TriggerContext.AFTER_INSERT;
+        }
+        when 'after update' {
+          this.context = TriggerContext.AFTER_UPDATE;
+        }
+        when 'after delete' {
+          this.context = TriggerContext.AFTER_DELETE;
+        }
+        when else {
+          this.context = TriggerContext.AFTER_UNDELETE;
+        }
+      }
+      return;
+    }
+
+    if (Trigger.isInsert){
+      this.context = Trigger.isBefore ? 
+      TriggerContext.BEFORE_INSERT 
+      : TriggerContext.AFTER_INSERT;
+    }else if(Trigger.isUpdate){
+        this.context = Trigger.isBefore ?
+        TriggerContext.BEFORE_UPDATE
+        : TriggerContext.AFTER_UPDATE;
+    }else if(Trigger.isDelete){
+      this.context = Trigger.isBefore ?
+        TriggerContext.BEFORE_DELETE
+        : TriggerContext.AFTER_DELETE;
+    }else if(Trigger.isUndelete){
       this.context = TriggerContext.AFTER_UNDELETE;
     }
   }
@@ -236,5 +254,4 @@ public with sharing virtual class TriggerHandler {
 
   // exception class
   public class TriggerHandlerException extends Exception {}
-
 }
